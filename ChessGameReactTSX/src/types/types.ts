@@ -25,7 +25,7 @@ export type Board = Array<Array<Piece | null>>;
 export interface GameState {
     board: Board,
     currentTurn: PieceColor,
-    selectedPiece: Piece,
+    selectedPiece: Piece | null,
     possibleMoves: Position[]
     previousMove: {from: Position; to: Position}
 }
