@@ -9,11 +9,10 @@ import {
   PieceType,
   Position,
 } from "../../types/types";
+import { isValidMove } from "../../game/MoveValidator";
+import { HORIZONTAL_AXIS, VERTICAL_AXIS } from "../../Constants";
 
 const ChessBoard = () => {
-  const HORIZONTAL_AXIS = ["a", "b", "c", "d", "e", "f", "g", "h"];
-  const VERTICAL_AXIS = ["1", "2", "3", "4", "5", "6", "7", "8"];
-
   const [gameState, setGameState] = useState<GameState>(() => ({
     board: initializeBoard(),
     currentTurn: PieceColor.WHITE,
@@ -33,7 +32,6 @@ const ChessBoard = () => {
 
   const handleMouseDown = (piece: Piece, event: React.MouseEvent) => {
     event.preventDefault();
-    console.log("Mouse down");
     const chessboard = chessboardRef.current;
 
     if (chessboard) {
@@ -46,8 +44,6 @@ const ChessBoard = () => {
           selectedPiece: null,
         });
       } else {
-        console.log("test");
-
         setGameState({
           ...gameState,
           selectedPiece: piece,
@@ -107,13 +103,11 @@ const ChessBoard = () => {
       setHoveredSquare(xAxis.toString() + yAxis.toString());
       // --------------
 
-      console.log("dragged position");
       setDraggedPosition({ x: event.clientX, y: event.clientY });
     }
   };
 
   const handleMouseUp = () => {
-    //console.log("Mouse up");
     const chessboard = chessboardRef.current;
 
     const selectedPiece = gameState.selectedPiece;
@@ -133,31 +127,62 @@ const ChessBoard = () => {
       }`;
 
       if (selectedPiece.position !== position) {
-        setGameState((prevState) => {
-          console.log(prevState);
-          const newBoard = prevState.board.map((row) => [...row]);
-          const oldPosition = selectedPiece.position;
-          const updatedPiece = { ...selectedPiece, position: position };
+        const oldPosition = selectedPiece.position;
+        const updatedPiece = { ...selectedPiece, position: position };
 
-          newBoard[verticalTileIndex][horizontalTileIndex] = updatedPiece;
-          newBoard[VERTICAL_AXIS.length - parseInt(oldPosition[1])][
-            HORIZONTAL_AXIS.indexOf(oldPosition[0])
-          ] = null;
+        let isValid = isValidMove(
+          updatedPiece,
+          oldPosition,
+          gameState.board,
+          gameState.previousMove
+        );
 
-          console.log(newBoard);
+        let isEnPassant = false;
 
-          const switchTurn =
-            prevState.currentTurn === PieceColor.WHITE
-              ? PieceColor.BLACK
-              : PieceColor.WHITE;
-          return {
-            ...prevState,
-            board: newBoard,
+        if (
+          typeof isValid === "object" &&
+          isValid !== null &&
+          "isValid" in isValid
+        ) {
+          isEnPassant = isValid.isEnPassant;
+          isValid = isValid.isValid;
+        }
+
+        if (isValid) {
+          setGameState((prevState) => {
+            const newBoard = prevState.board.map((row) => [...row]);
+            newBoard[verticalTileIndex][horizontalTileIndex] = updatedPiece;
+
+            if (isEnPassant) {
+              console.log("En passants");
+              newBoard[VERTICAL_AXIS.length - parseInt(oldPosition[1])][
+                HORIZONTAL_AXIS.indexOf(oldPosition[0]) +
+                  (selectedPiece.color === PieceColor.WHITE ? 1 : -1)
+              ] = null;
+              isEnPassant = false;
+            }
+            newBoard[VERTICAL_AXIS.length - parseInt(oldPosition[1])][
+              HORIZONTAL_AXIS.indexOf(oldPosition[0])
+            ] = null;
+
+            const switchTurn =
+              prevState.currentTurn === PieceColor.WHITE
+                ? PieceColor.BLACK
+                : PieceColor.WHITE;
+            return {
+              ...prevState,
+              board: newBoard,
+              selectedPiece: null,
+              previousMove: { from: oldPosition, to: position },
+              currentTurn: switchTurn,
+            };
+          });
+        } else {
+          setGameState({
+            ...gameState,
             selectedPiece: null,
-            previousMove: { from: oldPosition, to: position },
-            currentTurn: switchTurn,
-          };
-        });
+          });
+        }
       } else {
         setGameState({
           ...gameState,
@@ -170,7 +195,6 @@ const ChessBoard = () => {
   };
 
   let boardUI = [];
-  console.log(gameState);
 
   for (let row = VERTICAL_AXIS.length - 1; row >= 0; row--) {
     for (let col = 0; col < HORIZONTAL_AXIS.length; col++) {
