@@ -26,6 +26,10 @@
     background-color: grey;
 }
 
+.hovered {
+    box-shadow: inset 0 0 0 8px rgba(255, 255, 255, 0.7); /* Creates an inner white border */
+}
+
 
 
 .piece {

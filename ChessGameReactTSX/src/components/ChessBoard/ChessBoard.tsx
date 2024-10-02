@@ -7,6 +7,7 @@ import {
   Piece,
   PieceColor,
   PieceType,
+  Position,
 } from "../../types/types";
 
 const ChessBoard = () => {
@@ -21,6 +22,8 @@ const ChessBoard = () => {
     previousMove: { from: "", to: "" },
   }));
 
+  const [hoveredSquare, setHoveredSquare] = useState<Position>("");
+
   const [draggedPosition, setDraggedPosition] = useState<{
     x: number;
     y: number;
@@ -31,28 +34,79 @@ const ChessBoard = () => {
   const handleMouseDown = (piece: Piece, event: React.MouseEvent) => {
     event.preventDefault();
     console.log("Mouse down");
-    if (gameState.selectedPiece === piece) {
-      setGameState({
-        ...gameState,
-        selectedPiece: null,
-      });
-    } else {
-      console.log("test");
+    const chessboard = chessboardRef.current;
 
-      setGameState({
-        ...gameState,
-        selectedPiece: piece,
-      });
+    if (chessboard) {
+      const boardStartHorizontal = chessboard.offsetLeft;
+      const boardStartVertical = chessboard.offsetTop;
 
-      setDraggedPosition({ x: event.clientX, y: event.clientY });
+      if (gameState.selectedPiece === piece) {
+        setGameState({
+          ...gameState,
+          selectedPiece: null,
+        });
+      } else {
+        console.log("test");
+
+        setGameState({
+          ...gameState,
+          selectedPiece: piece,
+        });
+
+        setDraggedPosition({ x: event.clientX, y: event.clientY });
+
+        // This is functionality to show that you are hovering over a square.
+        const hoveredX = Math.floor(
+          (event.clientX - boardStartHorizontal) / (chessboard.clientWidth / 8)
+        );
+        const hoveredY = Math.floor(
+          (event.clientY - boardStartVertical) / (chessboard.clientHeight / 8)
+        );
+
+        const xAxis = HORIZONTAL_AXIS[hoveredX];
+        const yAxis = VERTICAL_AXIS[VERTICAL_AXIS.length - hoveredY - 1];
+        setHoveredSquare(xAxis.toString() + yAxis.toString());
+        // --------------
+      }
     }
   };
 
-  console.log("re render");
-  console.log(gameState);
-
   const handleMouseMove = (event: React.MouseEvent) => {
-    if (gameState.selectedPiece) {
+    if (gameState.selectedPiece && chessboardRef.current) {
+      const chessboard = chessboardRef.current;
+
+      const boardStartHorizontal = chessboard.offsetLeft;
+      const boardStartVertical = chessboard.offsetTop;
+      const boardEndHorizontal = chessboard.clientWidth + boardStartHorizontal;
+      const boardEndVertical = chessboard.clientHeight + boardStartVertical;
+
+      if (
+        event.clientX > boardEndHorizontal - 20 ||
+        event.clientX < boardStartHorizontal + 20 ||
+        event.clientY > boardEndVertical - 25 ||
+        event.clientY < boardStartVertical + 28
+      ) {
+        setHoveredSquare("");
+        setGameState({
+          ...gameState,
+          selectedPiece: null,
+        });
+        return;
+      }
+
+      // This is functionality to show that you are hovering over a square.
+      const hoveredX = Math.floor(
+        (event.clientX - boardStartHorizontal) / (chessboard.clientWidth / 8)
+      );
+      const hoveredY = Math.floor(
+        (event.clientY - boardStartVertical) / (chessboard.clientHeight / 8)
+      );
+
+      const xAxis = HORIZONTAL_AXIS[hoveredX];
+      const yAxis = VERTICAL_AXIS[VERTICAL_AXIS.length - hoveredY - 1];
+      setHoveredSquare(xAxis.toString() + yAxis.toString());
+      // --------------
+
       console.log("dragged position");
       setDraggedPosition({ x: event.clientX, y: event.clientY });
     }
@@ -111,13 +165,12 @@ const ChessBoard = () => {
         });
       }
     }
+
+    setHoveredSquare("");
   };
-  // console.log("Updated Game State:", gameState); // Log the entire game state
-  // console.log(board);
-  //onMouseMove={(event) => handleMouseMove(event)}
-  // console.log("TRASH");
 
   let boardUI = [];
+  console.log(gameState);
 
   for (let row = VERTICAL_AXIS.length - 1; row >= 0; row--) {
     for (let col = 0; col < HORIZONTAL_AXIS.length; col++) {
@@ -128,7 +181,9 @@ const ChessBoard = () => {
       boardUI.push(
         <div
           key={tileId}
-          className={`${color} square${isSelected ? " selected" : ""}`}
+          className={`${color} square${isSelected ? " selected" : ""} ${
+            hoveredSquare === tileId ? "hovered" : ""
+          }`}
           onMouseMove={
             gameState.selectedPiece
               ? (event) => handleMouseMove(event)
