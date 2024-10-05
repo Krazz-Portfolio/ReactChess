@@ -9,7 +9,7 @@ import {
   PieceType,
   Position,
 } from "../../types/types";
-import { isValidMove } from "../../game/MoveValidator";
+import { getPossibleMoves, isValidMove } from "../../game/MoveValidator";
 import { HORIZONTAL_AXIS, VERTICAL_AXIS } from "../../Constants";
 
 const ChessBoard = () => {
@@ -44,9 +44,16 @@ const ChessBoard = () => {
           selectedPiece: null,
         });
       } else {
+        const possibleMoves = getPossibleMoves(
+          piece,
+          piece.position,
+          gameState.board,
+          gameState.previousMove
+        );
         setGameState({
           ...gameState,
           selectedPiece: piece,
+          possibleMoves: possibleMoves,
         });
 
         setDraggedPosition({ x: event.clientX, y: event.clientY });
@@ -134,7 +141,8 @@ const ChessBoard = () => {
           updatedPiece,
           oldPosition,
           gameState.board,
-          gameState.previousMove
+          gameState.previousMove,
+          gameState.possibleMoves
         );
 
         let isEnPassant = false;
@@ -151,19 +159,18 @@ const ChessBoard = () => {
         if (isValid) {
           setGameState((prevState) => {
             const newBoard = prevState.board.map((row) => [...row]);
+
             newBoard[verticalTileIndex][horizontalTileIndex] = updatedPiece;
 
-            if (isEnPassant) {
-              console.log("En passants");
-              newBoard[VERTICAL_AXIS.length - parseInt(oldPosition[1])][
-                HORIZONTAL_AXIS.indexOf(oldPosition[0]) +
-                  (selectedPiece.color === PieceColor.WHITE ? 1 : -1)
-              ] = null;
-              isEnPassant = false;
-            }
             newBoard[VERTICAL_AXIS.length - parseInt(oldPosition[1])][
               HORIZONTAL_AXIS.indexOf(oldPosition[0])
             ] = null;
+
+            if (isEnPassant) {
+              newBoard[VERTICAL_AXIS.length - parseInt(oldPosition[1])][
+                HORIZONTAL_AXIS.indexOf(updatedPiece.position[0])
+              ] = null;
+            }
 
             const switchTurn =
               prevState.currentTurn === PieceColor.WHITE
@@ -178,22 +185,24 @@ const ChessBoard = () => {
             };
           });
         } else {
+          console.log("SETTING");
           setGameState({
             ...gameState,
             selectedPiece: null,
           });
         }
       } else {
+        console.log("Setting agains");
         setGameState({
           ...gameState,
           selectedPiece: null,
         });
       }
     }
-
     setHoveredSquare("");
   };
 
+  // console.log(gameState.board);
   let boardUI = [];
 
   for (let row = VERTICAL_AXIS.length - 1; row >= 0; row--) {

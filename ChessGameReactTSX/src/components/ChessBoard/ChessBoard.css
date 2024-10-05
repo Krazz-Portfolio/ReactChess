@@ -4,6 +4,8 @@
     grid-template-rows: repeat(8, 100px);
     border: 2px solid black;
     width: fit-content;
+
+    user-select: none;
 }
 
 .square {
