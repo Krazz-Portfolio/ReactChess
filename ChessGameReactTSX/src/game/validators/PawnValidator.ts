@@ -67,7 +67,6 @@ Boolean | undefined | {isValid: boolean; isEnPassant: boolean} => {
     return false;
 }
 
-
 export const getPossiblePawnMoves = (team: PieceColor, board: Board, oldPosition: Position, previousMove: {from: Position, to: Position}) => {
 
     let possibleMoves: string[] = []
@@ -115,7 +114,6 @@ export const getPossiblePawnMoves = (team: PieceColor, board: Board, oldPosition
 
     if (previousMove.from !== '') {
         const prevFromCoordinateY =  VERTICAL_AXIS.length - parseInt(previousMove.from[1]);
-        const prevFromCoordinateX = HORIZONTAL_AXIS.indexOf(String.fromCharCode(previousMove.from[0].charCodeAt(0)));
 
         const prevToCoordinateY =  VERTICAL_AXIS.length - parseInt(previousMove.to[1]);
         const prevToCoordinateX = HORIZONTAL_AXIS.indexOf(String.fromCharCode(previousMove.to[0].charCodeAt(0)));

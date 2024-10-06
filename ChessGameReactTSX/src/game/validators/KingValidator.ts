@@ -29,5 +29,6 @@ export const getPossibleKingMoves = (team: PieceColor, board: Board, oldPosition
             possibleMoves.push(String.fromCharCode(oldPosition[0].charCodeAt(0) + move[1]) + (parseInt(oldPosition[1]) + move[0]).toString())
         }
     });
+
     return possibleMoves;
 }

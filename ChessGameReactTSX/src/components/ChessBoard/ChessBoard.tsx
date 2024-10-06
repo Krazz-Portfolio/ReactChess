@@ -1,18 +1,15 @@
 import "./ChessBoard.css";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { initializeBoard } from "../../utils/initializeBoard";
-import {
-  Board,
-  GameState,
-  Piece,
-  PieceColor,
-  PieceType,
-  Position,
-} from "../../types/types";
+import { GameState, Piece, PieceColor, Position } from "../../types/types";
 import { getPossibleMoves, isValidMove } from "../../game/MoveValidator";
 import { HORIZONTAL_AXIS, VERTICAL_AXIS } from "../../Constants";
 
-const ChessBoard = () => {
+interface Props {
+  showPossibleMoves: boolean;
+}
+
+const ChessBoard = ({ showPossibleMoves }: Props) => {
   const [gameState, setGameState] = useState<GameState>(() => ({
     board: initializeBoard(),
     currentTurn: PieceColor.WHITE,
@@ -33,6 +30,8 @@ const ChessBoard = () => {
   const handleMouseDown = (piece: Piece, event: React.MouseEvent) => {
     event.preventDefault();
     const chessboard = chessboardRef.current;
+
+    idToBoardCoordinates("e4");
 
     if (chessboard) {
       const boardStartHorizontal = chessboard.offsetLeft;
@@ -182,27 +181,46 @@ const ChessBoard = () => {
               selectedPiece: null,
               previousMove: { from: oldPosition, to: position },
               currentTurn: switchTurn,
+              possibleMoves: [],
             };
           });
         } else {
-          console.log("SETTING");
+          // Move is invalid
           setGameState({
             ...gameState,
             selectedPiece: null,
+            possibleMoves: [],
           });
         }
       } else {
-        console.log("Setting agains");
+        // Standing on the same spot as before
         setGameState({
           ...gameState,
           selectedPiece: null,
+          possibleMoves: [],
         });
       }
     }
     setHoveredSquare("");
   };
 
-  // console.log(gameState.board);
+  function idToBoardCoordinates(tileId: string) {
+    const x = HORIZONTAL_AXIS.indexOf(tileId[0]);
+    const y = VERTICAL_AXIS.length - parseInt(tileId[1]);
+
+    return [y, x];
+  }
+
+  function isAttackMove(tileId: string) {
+    const coordinates = idToBoardCoordinates(tileId);
+
+    if (gameState.board[coordinates[0]][coordinates[1]] !== null) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   let boardUI = [];
 
   for (let row = VERTICAL_AXIS.length - 1; row >= 0; row--) {
@@ -211,11 +229,22 @@ const ChessBoard = () => {
       const tileId = `${HORIZONTAL_AXIS[col]}${VERTICAL_AXIS[row]}`;
       const isSelected = gameState.selectedPiece?.position === tileId;
       const piece = gameState.board[VERTICAL_AXIS.length - row - 1][col];
+      const isAPossibleMove = gameState.possibleMoves.includes(tileId);
+      const isPossibleAttackMove = isAPossibleMove
+        ? isAttackMove(tileId)
+        : false;
+
       boardUI.push(
         <div
           key={tileId}
           className={`${color} square${isSelected ? " selected" : ""} ${
             hoveredSquare === tileId ? "hovered" : ""
+          } ${
+            isPossibleAttackMove && showPossibleMoves
+              ? "possible-attack-move"
+              : isAPossibleMove && showPossibleMoves
+              ? "possible-move"
+              : ""
           }`}
           onMouseMove={
             gameState.selectedPiece
