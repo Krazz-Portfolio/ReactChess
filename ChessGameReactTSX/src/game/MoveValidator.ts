@@ -7,12 +7,11 @@ import { getPossibleBishopMoves } from "./validators/BishopValidator";
 
 
 export const isValidMove = (piece: Piece, oldPosition: Position, board: Board, previousMove: {from: Position; to: Position}, possibleMoves: Position[]) : 
-Boolean | undefined | {isValid: boolean; isEnPassant: boolean} => {
+Boolean | undefined | {isValid: boolean; isEnPassant: boolean, isCastle: boolean} => {
 
     switch(piece.type) {
         case PieceType.PAWN:
             return(validateMove(piece, possibleMoves));
-            // return(isValidPawnMove(piece, oldPosition, board, previousMove));
         case PieceType.ROOK:
             return(validateMove(piece, possibleMoves));
         case PieceType.BISHOP:
@@ -39,7 +38,7 @@ export const getPossibleMoves = (piece: Piece, oldPosition: Position, board: Boa
         case PieceType.KNIGHT:
             return getPossibleKnightMoves(piece.color, board, oldPosition);
         case PieceType.KING:
-            return(getPossibleKingMoves(piece.color, board, oldPosition));
+            return(getPossibleKingMoves(piece, board, oldPosition));
         case PieceType.QUEEN:
             const diagonal = getPossibleBishopMoves(piece.color, board, oldPosition);
             const straight = getPossibleRookMoves(piece.color, board, oldPosition);
@@ -54,14 +53,24 @@ const validateMove = (piece: Piece, possibleMoves: Position[]) => {
             const enPassantMove = move.split(' ')[0];
             return enPassantMove === piece.position;
         }
+
+        if (typeof move === 'string' && move.includes(' - Castle')) {
+            console.log("its a castling move")
+            const castleMove = move.split(' ')[0];
+            return castleMove === piece.position;
+        }
         return move === piece.position;
     });
     
     if(isValidMove) {
-        const isEnPassant = isValidMove.includes(' - En Passant');
-        if (isEnPassant) {
-            return { isValid: true, isEnPassant: true };
-        } else {
+
+        if (isValidMove.includes(' - En Passant')) {
+            return { isValid: true, isEnPassant: true, isCastle: false };
+        }
+        else if (isValidMove.includes(' - Castle')) {
+            return { isValid: true, isEnPassant: false, isCastle: true };
+        }
+        else {
             return true;
         }
     } else {

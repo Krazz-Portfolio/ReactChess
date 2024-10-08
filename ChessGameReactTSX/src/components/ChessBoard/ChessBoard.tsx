@@ -31,8 +31,6 @@ const ChessBoard = ({ showPossibleMoves }: Props) => {
     event.preventDefault();
     const chessboard = chessboardRef.current;
 
-    idToBoardCoordinates("e4");
-
     if (chessboard) {
       const boardStartHorizontal = chessboard.offsetLeft;
       const boardStartVertical = chessboard.offsetTop;
@@ -144,13 +142,17 @@ const ChessBoard = ({ showPossibleMoves }: Props) => {
           gameState.possibleMoves
         );
 
+        console.log(isValid);
+
         let isEnPassant = false;
+        let isCastle = false;
 
         if (
           typeof isValid === "object" &&
           isValid !== null &&
           "isValid" in isValid
         ) {
+          isCastle = isValid.isCastle;
           isEnPassant = isValid.isEnPassant;
           isValid = isValid.isValid;
         }
@@ -159,17 +161,45 @@ const ChessBoard = ({ showPossibleMoves }: Props) => {
           setGameState((prevState) => {
             const newBoard = prevState.board.map((row) => [...row]);
 
-            newBoard[verticalTileIndex][horizontalTileIndex] = updatedPiece;
+            updatedPiece.hasMoved = true;
 
-            newBoard[VERTICAL_AXIS.length - parseInt(oldPosition[1])][
-              HORIZONTAL_AXIS.indexOf(oldPosition[0])
-            ] = null;
+            if (isCastle) {
+              const rookX =
+                HORIZONTAL_AXIS.indexOf(updatedPiece.position[0]) > 4 ? 7 : 0;
+              const newRookX = rookX === 7 ? 5 : 3;
+              const newKingX =
+                HORIZONTAL_AXIS.indexOf(updatedPiece.position[0]) > 4 ? 6 : 2;
+
+              const rookToBeMoved = newBoard[verticalTileIndex][rookX];
+
+              if (rookToBeMoved) {
+                rookToBeMoved.position =
+                  HORIZONTAL_AXIS[newRookX] + rookToBeMoved.position[1];
+
+                newBoard[verticalTileIndex][newRookX] = rookToBeMoved;
+
+                newBoard[verticalTileIndex][rookX] = null;
+              }
+
+              updatedPiece.position =
+                HORIZONTAL_AXIS[newKingX] + updatedPiece.position[1];
+
+              newBoard[verticalTileIndex][newKingX] = updatedPiece;
+            } else {
+              newBoard[verticalTileIndex][horizontalTileIndex] = updatedPiece;
+            }
+
+            console.log(newBoard);
 
             if (isEnPassant) {
               newBoard[VERTICAL_AXIS.length - parseInt(oldPosition[1])][
                 HORIZONTAL_AXIS.indexOf(updatedPiece.position[0])
               ] = null;
             }
+
+            newBoard[VERTICAL_AXIS.length - parseInt(oldPosition[1])][
+              HORIZONTAL_AXIS.indexOf(oldPosition[0])
+            ] = null;
 
             const switchTurn =
               prevState.currentTurn === PieceColor.WHITE
@@ -229,7 +259,9 @@ const ChessBoard = ({ showPossibleMoves }: Props) => {
       const tileId = `${HORIZONTAL_AXIS[col]}${VERTICAL_AXIS[row]}`;
       const isSelected = gameState.selectedPiece?.position === tileId;
       const piece = gameState.board[VERTICAL_AXIS.length - row - 1][col];
-      const isAPossibleMove = gameState.possibleMoves.includes(tileId);
+      const isAPossibleMove = gameState.possibleMoves.some((move) =>
+        move.startsWith(tileId)
+      );
       const isPossibleAttackMove = isAPossibleMove
         ? isAttackMove(tileId)
         : false;

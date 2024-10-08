@@ -9,3 +9,15 @@
 body {
   margin: 0;
 }
+
+.game {
+  height: fit-content;
+}
+
+.game h1 {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0;
+  height: 50px;
+}

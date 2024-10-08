@@ -17,8 +17,11 @@ export type Position = string;
 export interface Piece {
     type: PieceType,
     color: PieceColor,
-    position: Position
+    position: Position,
+    hasMoved: boolean,
 }
+
+// Add a new variable: hasMoved
 
 export type Board = Array<Array<Piece | null>>;
 
