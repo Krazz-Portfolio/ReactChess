@@ -11,9 +11,10 @@ import { HORIZONTAL_AXIS, VERTICAL_AXIS } from "../../Constants";
 
 interface Props {
   showPossibleMoves: boolean;
+  setCurrentTurn: (value: PieceColor) => void;
 }
 
-const ChessBoard = ({ showPossibleMoves }: Props) => {
+const ChessBoard = ({ showPossibleMoves, setCurrentTurn }: Props) => {
   const [gameState, setGameState] = useState<GameState>(() => ({
     board: initializeBoard(),
     currentTurn: PieceColor.WHITE,
@@ -162,75 +163,74 @@ const ChessBoard = ({ showPossibleMoves }: Props) => {
         }
 
         if (isValid) {
-          setGameState((prevState) => {
-            const newBoard = prevState.board.map((row) => [...row]);
+          const newBoard = gameState.board.map((row) => [...row]);
 
-            updatedPiece.hasMoved = true;
+          updatedPiece.hasMoved = true;
 
-            if (isCastle) {
-              const rookX =
-                HORIZONTAL_AXIS.indexOf(updatedPiece.position[0]) > 4 ? 7 : 0;
-              const newRookX = rookX === 7 ? 5 : 3;
-              const newKingX =
-                HORIZONTAL_AXIS.indexOf(updatedPiece.position[0]) > 4 ? 6 : 2;
+          if (isCastle) {
+            const rookX =
+              HORIZONTAL_AXIS.indexOf(updatedPiece.position[0]) > 4 ? 7 : 0;
+            const newRookX = rookX === 7 ? 5 : 3;
+            const newKingX =
+              HORIZONTAL_AXIS.indexOf(updatedPiece.position[0]) > 4 ? 6 : 2;
 
-              const rookToBeMoved = newBoard[verticalTileIndex][rookX];
+            const rookToBeMoved = newBoard[verticalTileIndex][rookX];
 
-              if (rookToBeMoved) {
-                rookToBeMoved.position =
-                  HORIZONTAL_AXIS[newRookX] + rookToBeMoved.position[1];
+            if (rookToBeMoved) {
+              rookToBeMoved.position =
+                HORIZONTAL_AXIS[newRookX] + rookToBeMoved.position[1];
 
-                newBoard[verticalTileIndex][newRookX] = rookToBeMoved;
+              newBoard[verticalTileIndex][newRookX] = rookToBeMoved;
 
-                newBoard[verticalTileIndex][rookX] = null;
-              }
-
-              updatedPiece.position =
-                HORIZONTAL_AXIS[newKingX] + updatedPiece.position[1];
-
-              newBoard[verticalTileIndex][newKingX] = updatedPiece;
-            } else {
-              newBoard[verticalTileIndex][horizontalTileIndex] = updatedPiece;
+              newBoard[verticalTileIndex][rookX] = null;
             }
 
-            // console.log(newBoard);
+            updatedPiece.position =
+              HORIZONTAL_AXIS[newKingX] + updatedPiece.position[1];
 
-            if (isEnPassant) {
-              newBoard[VERTICAL_AXIS.length - parseInt(oldPosition[1])][
-                HORIZONTAL_AXIS.indexOf(updatedPiece.position[0])
-              ] = null;
-            }
+            newBoard[verticalTileIndex][newKingX] = updatedPiece;
+          } else {
+            newBoard[verticalTileIndex][horizontalTileIndex] = updatedPiece;
+          }
 
+          if (isEnPassant) {
             newBoard[VERTICAL_AXIS.length - parseInt(oldPosition[1])][
-              HORIZONTAL_AXIS.indexOf(oldPosition[0])
+              HORIZONTAL_AXIS.indexOf(updatedPiece.position[0])
             ] = null;
+          }
 
-            const isKingInDanger = validateKingInDanger(
-              newBoard,
-              selectedPiece.color
-            );
+          newBoard[VERTICAL_AXIS.length - parseInt(oldPosition[1])][
+            HORIZONTAL_AXIS.indexOf(oldPosition[0])
+          ] = null;
 
-            if (!isKingInDanger) {
-              const switchTurn =
-                prevState.currentTurn === PieceColor.WHITE
-                  ? PieceColor.BLACK
-                  : PieceColor.WHITE;
-              return {
-                ...prevState,
-                board: newBoard,
-                selectedPiece: null,
-                previousMove: { from: oldPosition, to: position },
-                currentTurn: switchTurn,
-                possibleMoves: [],
-              };
-            } else {
-              return {
-                ...prevState,
-                selectedPiece: null,
-                possibleMoves: [],
-              };
-            }
-          });
+          const isKingInDanger = validateKingInDanger(
+            newBoard,
+            selectedPiece.color
+          );
+
+          if (!isKingInDanger) {
+            const switchTurn =
+              gameState.currentTurn === PieceColor.WHITE
+                ? PieceColor.BLACK
+                : PieceColor.WHITE;
+
+            setGameState({
+              ...gameState,
+              board: newBoard,
+              selectedPiece: null,
+              previousMove: { from: oldPosition, to: position },
+              currentTurn: switchTurn,
+              possibleMoves: [],
+            });
+
+            setCurrentTurn(switchTurn);
+          } else {
+            return {
+              ...gameState,
+              selectedPiece: null,
+              possibleMoves: [],
+            };
+          }
         } else {
           // Move is invalid
           setGameState({
@@ -248,6 +248,7 @@ const ChessBoard = ({ showPossibleMoves }: Props) => {
         });
       }
     }
+    // setCurrentTurn(gameState.currentTurn);
     setHoveredSquare("");
   };
 
