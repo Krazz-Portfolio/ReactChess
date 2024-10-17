@@ -19,8 +19,6 @@ export const getPossibleRookMoves = (team: PieceColor, board: Board, oldPosition
     ];
 
     directions.forEach(direction => {
-        console.log("ROook")
-        console.log(direction)
 
         for(let i = 1; i < 8; i++) {
 

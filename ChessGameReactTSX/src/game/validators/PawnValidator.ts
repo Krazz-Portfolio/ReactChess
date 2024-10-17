@@ -33,7 +33,7 @@ Boolean | undefined | {isValid: boolean; isEnPassant: boolean} => {
 
     const isEnPassant = piece.position === inBetweenStartAndMove ? true : false;
 
-    console.log(inBetweenStartAndMove)
+    // console.log(inBetweenStartAndMove)
 
     
 

@@ -2,7 +2,11 @@ import "./ChessBoard.css";
 import { useRef, useState } from "react";
 import { initializeBoard } from "../../utils/initializeBoard";
 import { GameState, Piece, PieceColor, Position } from "../../types/types";
-import { getPossibleMoves, isValidMove } from "../../game/MoveValidator";
+import {
+  getPossibleMoves,
+  isValidMove,
+  validateKingInDanger,
+} from "../../game/MoveValidator";
 import { HORIZONTAL_AXIS, VERTICAL_AXIS } from "../../Constants";
 
 interface Props {
@@ -142,7 +146,7 @@ const ChessBoard = ({ showPossibleMoves }: Props) => {
           gameState.possibleMoves
         );
 
-        console.log(isValid);
+        // console.log(isValid);
 
         let isEnPassant = false;
         let isCastle = false;
@@ -189,7 +193,7 @@ const ChessBoard = ({ showPossibleMoves }: Props) => {
               newBoard[verticalTileIndex][horizontalTileIndex] = updatedPiece;
             }
 
-            console.log(newBoard);
+            // console.log(newBoard);
 
             if (isEnPassant) {
               newBoard[VERTICAL_AXIS.length - parseInt(oldPosition[1])][
@@ -201,18 +205,31 @@ const ChessBoard = ({ showPossibleMoves }: Props) => {
               HORIZONTAL_AXIS.indexOf(oldPosition[0])
             ] = null;
 
-            const switchTurn =
-              prevState.currentTurn === PieceColor.WHITE
-                ? PieceColor.BLACK
-                : PieceColor.WHITE;
-            return {
-              ...prevState,
-              board: newBoard,
-              selectedPiece: null,
-              previousMove: { from: oldPosition, to: position },
-              currentTurn: switchTurn,
-              possibleMoves: [],
-            };
+            const isKingInDanger = validateKingInDanger(
+              newBoard,
+              selectedPiece.color
+            );
+
+            if (!isKingInDanger) {
+              const switchTurn =
+                prevState.currentTurn === PieceColor.WHITE
+                  ? PieceColor.BLACK
+                  : PieceColor.WHITE;
+              return {
+                ...prevState,
+                board: newBoard,
+                selectedPiece: null,
+                previousMove: { from: oldPosition, to: position },
+                currentTurn: switchTurn,
+                possibleMoves: [],
+              };
+            } else {
+              return {
+                ...prevState,
+                selectedPiece: null,
+                possibleMoves: [],
+              };
+            }
           });
         } else {
           // Move is invalid

@@ -30,7 +30,7 @@ export const getPossibleKnightMoves = (team: PieceColor, board: Board, oldPositi
             possibleMoves.push(String.fromCharCode(oldPosition[0].charCodeAt(0) + move[1]) + (parseInt(oldPosition[1]) + move[0]).toString())
         }
     });
-    console.log(possibleMoves);
+    // console.log(possibleMoves);
     return possibleMoves;
     
 }

@@ -1,17 +1,25 @@
-import { Board, Piece, PieceType, Position } from "../types/types";
+import { Board, Piece, PieceColor, PieceType, Position } from "../types/types";
 import { getPossiblePawnMoves } from "./validators/PawnValidator";
 import { getPossibleRookMoves } from "./validators/RookValidator";
 import { getPossibleKingMoves } from "./validators/KingValidator";
 import { getPossibleKnightMoves } from "./validators/KnightValidator";
 import { getPossibleBishopMoves } from "./validators/BishopValidator";
+import { HORIZONTAL_AXIS, VERTICAL_AXIS } from "../Constants";
 
 
 export const isValidMove = (piece: Piece, oldPosition: Position, board: Board, previousMove: {from: Position; to: Position}, possibleMoves: Position[]) : 
 Boolean | undefined | {isValid: boolean; isEnPassant: boolean, isCastle: boolean} => {
 
+
+    // Call a function that checks if the king is in check if the moves goes through.
+
+
     switch(piece.type) {
         case PieceType.PAWN:
             return(validateMove(piece, possibleMoves));
+            // let moves = validateMove(piece, possibleMoves);
+            // console.log(moves);
+            // return moves;
         case PieceType.ROOK:
             return(validateMove(piece, possibleMoves));
         case PieceType.BISHOP:
@@ -30,7 +38,9 @@ export const getPossibleMoves = (piece: Piece, oldPosition: Position, board: Boa
     switch(piece.type) {
         case PieceType.PAWN:
             // return(isValidPawnMove(piece, oldPosition, board, previousMove));
-            return(getPossiblePawnMoves(piece.color, board, oldPosition, previousMove));
+            let moves = getPossiblePawnMoves(piece.color, board, oldPosition, previousMove)
+            return moves;
+            // return(getPossiblePawnMoves(piece.color, board, oldPosition, previousMove));
         case PieceType.ROOK:
             return(getPossibleRookMoves(piece.color, board, oldPosition));
         case PieceType.BISHOP:
@@ -77,4 +87,31 @@ const validateMove = (piece: Piece, possibleMoves: Position[]) => {
         return false;
     }
     
+}
+
+
+export const validateKingInDanger = (board: Board, team: PieceColor) => {
+
+    const enemyTeam = team === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
+
+    for(let row = 0; row < board.length; row++) {
+        for(let column = 0; column < board.length; column++) {
+            const piece = board[row][column];
+            if (piece?.color === enemyTeam) {
+                let possibleMoves = getPossibleMoves(piece, piece.position, board, {from: "", to: ""})
+
+                if(possibleMoves.some(move => {
+                    const horizontal = HORIZONTAL_AXIS.indexOf(move[0]);
+                    const vertical = VERTICAL_AXIS.length - parseInt(move[1]);
+                    if(board[vertical][horizontal]?.type === PieceType.KING) {
+                        return true;
+                    }
+                })) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
 }

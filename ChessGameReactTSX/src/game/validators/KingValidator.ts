@@ -12,7 +12,7 @@ export const getPossibleKingMoves = (piece: Piece, board: Board, oldPosition: Po
 
     const coordinateX = HORIZONTAL_AXIS.indexOf(String.fromCharCode(oldPosition[0].charCodeAt(0)));
 
-    console.log(coordinateY, coordinateX)
+    // console.log(coordinateY, coordinateX)
 
     const moves = [
         [-1, 1], [0, 1], [1, 1],
@@ -62,9 +62,6 @@ export const getPossibleKingMoves = (piece: Piece, board: Board, oldPosition: Po
             }
         }
     }
-
-    console.log("------------------")
-    console.log(possibleMoves);
 
     return possibleMoves;
 }
