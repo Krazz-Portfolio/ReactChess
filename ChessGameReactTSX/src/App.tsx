@@ -13,14 +13,16 @@ function App() {
 
   return (
     <div className="app">
+      <TurnIndicator currentTurn={currentTurn} />
       <div className="game">
-        <TurnIndicator currentTurn={currentTurn} />
         <ChessBoard
           showPossibleMoves={showPossibleMoves === true}
           setCurrentTurn={setCurrentTurn}
         />
+        <SettingsMenu
+          onClick={() => setShowPossibleMoves(!showPossibleMoves)}
+        />
       </div>
-      <SettingsMenu onClick={() => setShowPossibleMoves(!showPossibleMoves)} />
     </div>
   );
 }

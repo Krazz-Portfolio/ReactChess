@@ -1,23 +1,21 @@
-.app {
-  height: 100vh;
-  background-color: #2f2e2a;
-  padding-left: 50px;
-  padding-top: 50px;
-  display: flex;
-}
-
 body {
   margin: 0;
 }
 
-.game {
-  height: fit-content;
-}
-
-.game h1 {
+.app {
+  height: 100vh;
+  background-color: #2f2e2a;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  margin: 0;
-  height: 50px;
 }
+
+.game {
+  display: flex;
+  width: 100%;
+  max-width: 1200px;
+  justify-content: center; 
+  height: auto;
+}
+

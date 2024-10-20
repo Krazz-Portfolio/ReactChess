@@ -1,29 +1,49 @@
 .setting-menu {
-    width: 20%;
-    color: white;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background-color: #262521;
-    margin-left: 2%;
-    margin-top: 50px;
-    height: 800px;
-    border: 2px solid black;
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  max-width: 250px;
+  width: 100%; 
+  min-width: 250px; 
+  background-color: #262521;
+  border: 2px solid black;
+  color: white;
+  margin-left: 1rem;
+  text-align: center;
 }
 
 .options {
-    display: flex;
-    justify-content: space-between; /* Puts as much space as possible between the items */
-    width: 80%; /* Ensure the options div stretches to fill the available space */
-    align-items: center;
+  margin-top: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 1rem;
 }
 
+@media screen and (max-width: 750px) {
+  .game {
+    display: inline;
+  }
+
+  .setting-menu {
+    margin-top: 1rem; 
+    width: 80%; 
+    max-width: none; 
+    min-width: 100px;
+    margin: 0 auto;
+    margin-top: 10px; 
+  }
+
+  .setting-menu h1 {
+    margin: 0;
+  }
+
+}
 
 input {
-    --s: 10px; /* adjust this to control the size*/
-    
+    --s: 10px; 
     height: calc(var(--s) + var(--s)/5);
-    width: auto; /* some browsers need this */
+    width: auto; 
     aspect-ratio: 2.25;
     border-radius: var(--s);
     margin: calc(var(--s)/2);

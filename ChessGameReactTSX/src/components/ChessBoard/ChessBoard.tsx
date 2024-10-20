@@ -30,6 +30,8 @@ const ChessBoard = ({ showPossibleMoves, setCurrentTurn }: Props) => {
     y: number;
   } | null>(null);
 
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+
   const chessboardRef = useRef<HTMLDivElement | null>(null);
 
   const handleMouseDown = (piece: Piece, event: React.MouseEvent) => {
@@ -58,7 +60,10 @@ const ChessBoard = ({ showPossibleMoves, setCurrentTurn }: Props) => {
           possibleMoves: possibleMoves,
         });
 
-        setDraggedPosition({ x: event.clientX, y: event.clientY });
+        setDraggedPosition({
+          x: event.clientX - boardStartHorizontal,
+          y: event.clientY - boardStartVertical,
+        });
 
         // This is functionality to show that you are hovering over a square.
         const hoveredX = Math.floor(
@@ -72,6 +77,13 @@ const ChessBoard = ({ showPossibleMoves, setCurrentTurn }: Props) => {
         const yAxis = VERTICAL_AXIS[VERTICAL_AXIS.length - hoveredY - 1];
         setHoveredSquare(xAxis.toString() + yAxis.toString());
         // --------------
+
+        // To make sure the pointer is on the middle of the piece.
+        const target = event.currentTarget as HTMLElement;
+        const offsetX = target.clientWidth / 2;
+        const offsetY = target.clientHeight / 2;
+
+        setDragOffset({ x: offsetX, y: offsetY });
       }
     }
   };
@@ -88,13 +100,14 @@ const ChessBoard = ({ showPossibleMoves, setCurrentTurn }: Props) => {
       if (
         event.clientX > boardEndHorizontal - 20 ||
         event.clientX < boardStartHorizontal + 20 ||
-        event.clientY > boardEndVertical - 25 ||
+        event.clientY > boardEndVertical - 20 ||
         event.clientY < boardStartVertical + 28
       ) {
         setHoveredSquare("");
         setGameState({
           ...gameState,
           selectedPiece: null,
+          possibleMoves: [],
         });
         return;
       }
@@ -112,7 +125,10 @@ const ChessBoard = ({ showPossibleMoves, setCurrentTurn }: Props) => {
       setHoveredSquare(xAxis.toString() + yAxis.toString());
       // --------------
 
-      setDraggedPosition({ x: event.clientX, y: event.clientY });
+      setDraggedPosition({
+        x: event.clientX - boardStartHorizontal,
+        y: event.clientY - boardStartVertical,
+      });
     }
   };
 
@@ -122,15 +138,14 @@ const ChessBoard = ({ showPossibleMoves, setCurrentTurn }: Props) => {
     const selectedPiece = gameState.selectedPiece;
 
     if (chessboard && draggedPosition && selectedPiece) {
-      const boardStartHorizontal = chessboard?.offsetLeft;
-      const boardStartVertical = chessboard?.offsetTop;
       const horizontalTileIndex = Math.floor(
-        (draggedPosition.x - boardStartHorizontal) /
-          (chessboard.clientWidth / 8)
+        draggedPosition.x / (chessboard.clientWidth / 8)
       );
+
       const verticalTileIndex = Math.floor(
-        (draggedPosition.y - boardStartVertical) / (chessboard.clientWidth / 8)
+        draggedPosition.y / (chessboard.clientHeight / 8)
       );
+
       const position = `${HORIZONTAL_AXIS[horizontalTileIndex]}${
         VERTICAL_AXIS[VERTICAL_AXIS.length - 1 - verticalTileIndex]
       }`;
@@ -146,8 +161,6 @@ const ChessBoard = ({ showPossibleMoves, setCurrentTurn }: Props) => {
           gameState.previousMove,
           gameState.possibleMoves
         );
-
-        // console.log(isValid);
 
         let isEnPassant = false;
         let isCastle = false;
@@ -248,7 +261,6 @@ const ChessBoard = ({ showPossibleMoves, setCurrentTurn }: Props) => {
         });
       }
     }
-    // setCurrentTurn(gameState.currentTurn);
     setHoveredSquare("");
   };
 
@@ -310,10 +322,10 @@ const ChessBoard = ({ showPossibleMoves, setCurrentTurn }: Props) => {
               style={
                 isSelected && draggedPosition
                   ? {
-                      position: "absolute", // Set position to absolute when dragging
-                      left: `${draggedPosition.x - 35}px`, // Adjusting the piece's position relative to the cursor
-                      top: `${draggedPosition.y - 35}px`, // Adjusting the piece's position relative to the cursor
-                      // pointerEvents: "none", // Allow the piece to be dragged without interference
+                      position: "absolute",
+                      left: `${draggedPosition.x - dragOffset.x - 4}px`,
+                      top: `${draggedPosition.y - dragOffset.y}px`,
+                      zIndex: 1000,
                     }
                   : {}
               }
