@@ -3,11 +3,13 @@ import { useRef, useState } from "react";
 import { initializeBoard } from "../../utils/initializeBoard";
 import { GameState, Piece, PieceColor, Position } from "../../types/types";
 import {
+  checkIfCheckmate,
   getPossibleMoves,
   isValidMove,
   validateKingInDanger,
 } from "../../game/MoveValidator";
 import { HORIZONTAL_AXIS, VERTICAL_AXIS } from "../../Constants";
+import { WinnerOverlay } from "../WinnerOverlay/WinnerOverlay";
 
 interface Props {
   showPossibleMoves: boolean;
@@ -31,6 +33,8 @@ const ChessBoard = ({ showPossibleMoves, setCurrentTurn }: Props) => {
   } | null>(null);
 
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+
+  const [winner, setWinner] = useState<PieceColor | null>(null);
 
   const chessboardRef = useRef<HTMLDivElement | null>(null);
 
@@ -227,6 +231,27 @@ const ChessBoard = ({ showPossibleMoves, setCurrentTurn }: Props) => {
                 ? PieceColor.BLACK
                 : PieceColor.WHITE;
 
+            const isEnemyKingInDanger = validateKingInDanger(
+              newBoard,
+              selectedPiece.color === PieceColor.BLACK
+                ? PieceColor.WHITE
+                : PieceColor.BLACK
+            );
+
+            //console.log(isEnemyKingInDanger);
+            if (isEnemyKingInDanger) {
+              const isCheckmate = checkIfCheckmate(
+                newBoard,
+                selectedPiece.color === PieceColor.BLACK
+                  ? PieceColor.WHITE
+                  : PieceColor.BLACK
+              );
+              console.log(isCheckmate); // SOMEONE WON
+              if (isCheckmate) {
+                setWinner(selectedPiece.color);
+              }
+            }
+
             setGameState({
               ...gameState,
               board: newBoard,
@@ -344,6 +369,7 @@ const ChessBoard = ({ showPossibleMoves, setCurrentTurn }: Props) => {
   return (
     <div className="chessboard" ref={chessboardRef}>
       {boardUI}
+      {winner && <WinnerOverlay winner={winner} />}
     </div>
   );
 };
