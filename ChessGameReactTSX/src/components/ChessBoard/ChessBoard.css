@@ -15,7 +15,7 @@
     max-height: 85vh;
     flex-grow: 1; 
     max-width: 90vh; 
-
+    border: 2px solid black;
     user-select: none;
 }
 

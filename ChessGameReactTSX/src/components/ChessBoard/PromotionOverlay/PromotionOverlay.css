@@ -1,0 +1,7 @@
+.promotion-options {
+    position: absolute;
+    display:flex;
+    flex-direction: column;
+    width: 10%;
+    background-color: #262521;
+}

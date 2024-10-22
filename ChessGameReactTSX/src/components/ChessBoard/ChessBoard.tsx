@@ -1,7 +1,14 @@
 import "./ChessBoard.css";
 import { useRef, useState } from "react";
 import { initializeBoard } from "../../utils/initializeBoard";
-import { GameState, Piece, PieceColor, Position } from "../../types/types";
+import {
+  Board,
+  GameState,
+  Piece,
+  PieceColor,
+  PieceType,
+  Position,
+} from "../../types/types";
 import {
   checkIfCheckmate,
   getPossibleMoves,
@@ -10,6 +17,7 @@ import {
 } from "../../game/MoveValidator";
 import { HORIZONTAL_AXIS, VERTICAL_AXIS } from "../../Constants";
 import { WinnerOverlay } from "../WinnerOverlay/WinnerOverlay";
+import { PromotionOverlay } from "./PromotionOverlay/PromotionOverlay";
 
 interface Props {
   showPossibleMoves: boolean;
@@ -36,11 +44,21 @@ const ChessBoard = ({ showPossibleMoves, setCurrentTurn }: Props) => {
 
   const [winner, setWinner] = useState<PieceColor | null>(null);
 
+  const [promotionOverlay, setPromotionOverlay] = useState<PieceColor | null>(
+    null
+  );
+
+  const [promotionPiece, setPromotionPiece] = useState<Piece | null>(null);
+
+  const [oldPawnPosition, setOldPawnPosition] = useState<Position | null>(null);
+
   const chessboardRef = useRef<HTMLDivElement | null>(null);
 
   const handleMouseDown = (piece: Piece, event: React.MouseEvent) => {
     event.preventDefault();
     const chessboard = chessboardRef.current;
+
+    console.log(gameState.currentTurn);
 
     if (chessboard) {
       const boardStartHorizontal = chessboard.offsetLeft;
@@ -158,13 +176,7 @@ const ChessBoard = ({ showPossibleMoves, setCurrentTurn }: Props) => {
         const oldPosition = selectedPiece.position;
         const updatedPiece = { ...selectedPiece, position: position };
 
-        let isValid = isValidMove(
-          updatedPiece,
-          oldPosition,
-          gameState.board,
-          gameState.previousMove,
-          gameState.possibleMoves
-        );
+        let isValid = isValidMove(updatedPiece, gameState.possibleMoves);
 
         let isEnPassant = false;
         let isCastle = false;
@@ -226,48 +238,64 @@ const ChessBoard = ({ showPossibleMoves, setCurrentTurn }: Props) => {
           );
 
           if (!isKingInDanger) {
-            const switchTurn =
-              gameState.currentTurn === PieceColor.WHITE
-                ? PieceColor.BLACK
-                : PieceColor.WHITE;
+            if (
+              (selectedPiece.type === PieceType.PAWN &&
+                parseInt(updatedPiece.position[1]) === 8) ||
+              (selectedPiece.type === PieceType.PAWN &&
+                parseInt(updatedPiece.position[1]) === 1)
+            ) {
+              setPromotionPiece(updatedPiece);
+              setPromotionOverlay(selectedPiece.color);
+              setOldPawnPosition(selectedPiece.position);
+              setGameState({
+                ...gameState,
+                board: newBoard,
+                selectedPiece: null,
+                previousMove: { from: oldPosition, to: position },
+                possibleMoves: [],
+              });
+            } else {
+              const switchTurn =
+                gameState.currentTurn === PieceColor.WHITE
+                  ? PieceColor.BLACK
+                  : PieceColor.WHITE;
 
-            const isEnemyKingInDanger = validateKingInDanger(
-              newBoard,
-              selectedPiece.color === PieceColor.BLACK
-                ? PieceColor.WHITE
-                : PieceColor.BLACK
-            );
-
-            //console.log(isEnemyKingInDanger);
-            if (isEnemyKingInDanger) {
-              const isCheckmate = checkIfCheckmate(
+              const isEnemyKingInDanger = validateKingInDanger(
                 newBoard,
                 selectedPiece.color === PieceColor.BLACK
                   ? PieceColor.WHITE
                   : PieceColor.BLACK
               );
-              console.log(isCheckmate); // SOMEONE WON
-              if (isCheckmate) {
-                setWinner(selectedPiece.color);
-              }
-            }
 
+              if (isEnemyKingInDanger) {
+                const isCheckmate = checkIfCheckmate(
+                  newBoard,
+                  selectedPiece.color === PieceColor.BLACK
+                    ? PieceColor.WHITE
+                    : PieceColor.BLACK
+                );
+                if (isCheckmate) {
+                  setWinner(selectedPiece.color);
+                }
+              }
+
+              setGameState({
+                ...gameState,
+                board: newBoard,
+                selectedPiece: null,
+                previousMove: { from: oldPosition, to: position },
+                currentTurn: switchTurn,
+                possibleMoves: [],
+              });
+
+              setCurrentTurn(switchTurn);
+            }
+          } else {
             setGameState({
               ...gameState,
-              board: newBoard,
               selectedPiece: null,
-              previousMove: { from: oldPosition, to: position },
-              currentTurn: switchTurn,
               possibleMoves: [],
             });
-
-            setCurrentTurn(switchTurn);
-          } else {
-            return {
-              ...gameState,
-              selectedPiece: null,
-              possibleMoves: [],
-            };
           }
         } else {
           // Move is invalid
@@ -287,6 +315,55 @@ const ChessBoard = ({ showPossibleMoves, setCurrentTurn }: Props) => {
       }
     }
     setHoveredSquare("");
+  };
+
+  const handlePromotion = (piece: Piece) => {
+    const newX = HORIZONTAL_AXIS.indexOf(piece.position[0]);
+    const newY = VERTICAL_AXIS.length - parseInt(piece.position[1]);
+
+    if (!oldPawnPosition) {
+      return;
+    }
+
+    console.log(newY, newX);
+
+    const newBoard = gameState.board.map((row) => [...row]);
+
+    newBoard[newY][newX] = piece;
+
+    const switchTurn =
+      gameState.currentTurn === PieceColor.WHITE
+        ? PieceColor.BLACK
+        : PieceColor.WHITE;
+
+    const isEnemyKingInDanger = validateKingInDanger(
+      newBoard,
+      piece.color === PieceColor.BLACK ? PieceColor.WHITE : PieceColor.BLACK
+    );
+
+    if (isEnemyKingInDanger) {
+      const isCheckmate = checkIfCheckmate(
+        newBoard,
+        piece.color === PieceColor.BLACK ? PieceColor.WHITE : PieceColor.BLACK
+      );
+      console.log(isCheckmate);
+      if (isCheckmate) {
+        setWinner(piece.color);
+      }
+    }
+
+    setPromotionPiece(null);
+    setPromotionOverlay(null);
+    setGameState({
+      ...gameState,
+      board: newBoard,
+      selectedPiece: null,
+      previousMove: { from: oldPawnPosition, to: piece.position },
+      currentTurn: switchTurn,
+      possibleMoves: [],
+    });
+    setOldPawnPosition(null);
+    setCurrentTurn(switchTurn);
   };
 
   function idToBoardCoordinates(tileId: string) {
@@ -370,6 +447,12 @@ const ChessBoard = ({ showPossibleMoves, setCurrentTurn }: Props) => {
     <div className="chessboard" ref={chessboardRef}>
       {boardUI}
       {winner && <WinnerOverlay winner={winner} />}
+      {promotionOverlay && (
+        <PromotionOverlay
+          piece={promotionPiece}
+          onPromotion={handlePromotion}
+        />
+      )}
     </div>
   );
 };

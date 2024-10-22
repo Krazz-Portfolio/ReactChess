@@ -7,19 +7,12 @@ import { getPossibleBishopMoves } from "./validators/BishopValidator";
 import { HORIZONTAL_AXIS, VERTICAL_AXIS } from "../Constants";
 
 
-export const isValidMove = (piece: Piece, oldPosition: Position, board: Board, previousMove: {from: Position; to: Position}, possibleMoves: Position[]) : 
+export const isValidMove = (piece: Piece, possibleMoves: Position[]) : 
 Boolean | undefined | {isValid: boolean; isEnPassant: boolean, isCastle: boolean} => {
-
-
-    // Call a function that checks if the king is in check if the moves goes through.
-
 
     switch(piece.type) {
         case PieceType.PAWN:
             return(validateMove(piece, possibleMoves));
-            // let moves = validateMove(piece, possibleMoves);
-            // console.log(moves);
-            // return moves;
         case PieceType.ROOK:
             return(validateMove(piece, possibleMoves));
         case PieceType.BISHOP:
@@ -37,10 +30,8 @@ export const getPossibleMoves = (piece: Piece, oldPosition: Position, board: Boa
 
     switch(piece.type) {
         case PieceType.PAWN:
-            // return(isValidPawnMove(piece, oldPosition, board, previousMove));
             let moves = getPossiblePawnMoves(piece.color, board, oldPosition, previousMove)
             return moves;
-            // return(getPossiblePawnMoves(piece.color, board, oldPosition, previousMove));
         case PieceType.ROOK:
             return(getPossibleRookMoves(piece.color, board, oldPosition));
         case PieceType.BISHOP:
@@ -112,53 +103,36 @@ export const validateKingInDanger = (board: Board, team: PieceColor) => {
             }
         }
     }
-
     return false;
 }
 
 
 export const checkIfCheckmate =  (board: Board, team: PieceColor) => {
 
-
     for(let row = 0; row < board.length; row++) {
         for(let column = 0; column < board.length; column++) {
             const piece = board[row][column];
             if(piece?.color === team) {
                 let possibleMoves = getPossibleMoves(piece, piece.position, board, {from: "", to: ""})
-                
-                console.log("-------------------------")
-
-                
-                console.log(piece)
-                console.log(possibleMoves)
 
                 const oldPositionX = HORIZONTAL_AXIS.indexOf(piece.position[0])
                 const oldPositionY = VERTICAL_AXIS.length - parseInt(piece.position[1]);
-                // console.log("oldPosition: ", oldPositionX, oldPositionY)
 
                 for (let move of possibleMoves) {
                     const boardCopy = board.map(row => row.map(piece => piece ? { ...piece } : null));
                     const newPositionX = HORIZONTAL_AXIS.indexOf(move[0])
                     const newPositionY = VERTICAL_AXIS.length - parseInt(move[1]);
-                    // console.log("newPosition: ", newPositionX, newPositionY)
 
                     boardCopy[newPositionY][newPositionX] = piece;
                     boardCopy[oldPositionY][oldPositionX] = null;
-                    // console.log(boardCopy)
 
                     const isKingStillInDanger = validateKingInDanger(boardCopy, team);
-                    // console.log("JAJJJ")
-                    // console.log(isKingStillInDanger)
                     if(!isKingStillInDanger) {
-                        // console.log(piece)
-                        // console.log(newPositionX, newPositionY)
                         return false;
                     }
                 }
             }
         }
     }
-    console.log("Outside")
     return true;
-
 }
