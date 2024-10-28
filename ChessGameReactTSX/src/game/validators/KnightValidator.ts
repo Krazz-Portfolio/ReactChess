@@ -1,5 +1,5 @@
-import { HORIZONTAL_AXIS, VERTICAL_AXIS } from "../../Constants";
-import { Board, PieceColor, Position } from "../../types/types"
+import { HORIZONTAL_AXIS, VERTICAL_AXIS } from "../../data/constants/constants";
+import { Board, PieceColor, Position } from "../../data/types/types";
 
 export const getPossibleKnightMoves = (team: PieceColor, board: Board, oldPosition: Position) => {
 

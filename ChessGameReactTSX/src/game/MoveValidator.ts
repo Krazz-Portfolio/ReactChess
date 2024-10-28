@@ -1,53 +1,13 @@
-import { Board, Piece, PieceColor, PieceType, Position } from "../types/types";
-import { getPossiblePawnMoves } from "./validators/PawnValidator";
-import { getPossibleRookMoves } from "./validators/RookValidator";
+import { Board, Piece, PieceColor, PieceType, Position } from "../data/types/types";
+import { tileIdToBoardCoordinates } from "../utils/boardHelpers";
+import { getPossibleBishopMoves } from "./validators/BishopValidator";
 import { getPossibleKingMoves } from "./validators/KingValidator";
 import { getPossibleKnightMoves } from "./validators/KnightValidator";
-import { getPossibleBishopMoves } from "./validators/BishopValidator";
-import { HORIZONTAL_AXIS, VERTICAL_AXIS } from "../Constants";
+import { getPossiblePawnMoves } from "./validators/PawnValidator";
+import { getPossibleRookMoves } from "./validators/RookValidator";
 
-
-export const isValidMove = (piece: Piece, possibleMoves: Position[]) : 
+export const checkPossibleMoves = (piece: Piece, possibleMoves: Position[]) : 
 Boolean | undefined | {isValid: boolean; isEnPassant: boolean, isCastle: boolean} => {
-
-    switch(piece.type) {
-        case PieceType.PAWN:
-            return(validateMove(piece, possibleMoves));
-        case PieceType.ROOK:
-            return(validateMove(piece, possibleMoves));
-        case PieceType.BISHOP:
-            return(validateMove(piece, possibleMoves));
-        case PieceType.KNIGHT:
-            return(validateMove(piece, possibleMoves));
-        case PieceType.KING:
-            return(validateMove(piece, possibleMoves));
-        case PieceType.QUEEN:
-            return(validateMove(piece, possibleMoves));
-    }
-}
-
-export const getPossibleMoves = (piece: Piece, oldPosition: Position, board: Board, previousMove: {from: Position; to: Position}) : string[] => {
-
-    switch(piece.type) {
-        case PieceType.PAWN:
-            let moves = getPossiblePawnMoves(piece.color, board, oldPosition, previousMove)
-            return moves;
-        case PieceType.ROOK:
-            return(getPossibleRookMoves(piece.color, board, oldPosition));
-        case PieceType.BISHOP:
-            return(getPossibleBishopMoves(piece.color, board, oldPosition));
-        case PieceType.KNIGHT:
-            return getPossibleKnightMoves(piece.color, board, oldPosition);
-        case PieceType.KING:
-            return(getPossibleKingMoves(piece, board, oldPosition));
-        case PieceType.QUEEN:
-            const diagonal = getPossibleBishopMoves(piece.color, board, oldPosition);
-            const straight = getPossibleRookMoves(piece.color, board, oldPosition);
-            return(diagonal.concat(straight));
-    }
-}
-
-const validateMove = (piece: Piece, possibleMoves: Position[]) => {
 
     const isValidMove = possibleMoves.find(move => {
         if (typeof move === 'string' && move.includes(' - En Passant')) {
@@ -77,7 +37,28 @@ const validateMove = (piece: Piece, possibleMoves: Position[]) => {
     } else {
         return false;
     }
-    
+}
+
+export const getPossibleMoves = (piece: Piece, oldPosition: Position, board: Board, previousMove: {from: Position; to: Position}, isKingInDanger?: boolean) : string[] => {
+
+    // console.log("HAj", isKingInDanger)
+    switch(piece.type) {
+        case PieceType.PAWN:
+            let moves = getPossiblePawnMoves(piece.color, board, oldPosition, previousMove)
+            return moves;
+        case PieceType.ROOK:
+            return(getPossibleRookMoves(piece.color, board, oldPosition));
+        case PieceType.BISHOP:
+            return(getPossibleBishopMoves(piece.color, board, oldPosition));
+        case PieceType.KNIGHT:
+            return getPossibleKnightMoves(piece.color, board, oldPosition);
+        case PieceType.KING:
+            return(getPossibleKingMoves(piece, board, oldPosition, isKingInDanger));
+        case PieceType.QUEEN:
+            const diagonal = getPossibleBishopMoves(piece.color, board, oldPosition);
+            const straight = getPossibleRookMoves(piece.color, board, oldPosition);
+            return(diagonal.concat(straight));
+    }
 }
 
 
@@ -89,16 +70,14 @@ export const validateKingInDanger = (board: Board, team: PieceColor) => {
         for(let column = 0; column < board.length; column++) {
             const piece = board[row][column];
             if (piece?.color === enemyTeam) {
-                let possibleMoves = getPossibleMoves(piece, piece.position, board, {from: "", to: ""})
-
-                if(possibleMoves.some(move => {
-                    const horizontal = HORIZONTAL_AXIS.indexOf(move[0]);
-                    const vertical = VERTICAL_AXIS.length - parseInt(move[1]);
-                    if(board[vertical][horizontal]?.type === PieceType.KING) {
+                let possibleMoves = getPossibleMoves(piece, piece.position, board, {from: "", to: ""});
+                for(const move of possibleMoves) {
+                    const boardCoordinates = tileIdToBoardCoordinates(move);
+                    if(board[boardCoordinates.tileY][boardCoordinates.tileX]?.type === PieceType.KING &&
+                        board[boardCoordinates.tileY][boardCoordinates.tileX]?.color === team
+                    ) {
                         return true;
                     }
-                })) {
-                    return true;
                 }
             }
         }
@@ -107,27 +86,28 @@ export const validateKingInDanger = (board: Board, team: PieceColor) => {
 }
 
 
-export const checkIfCheckmate =  (board: Board, team: PieceColor) => {
+export const validateIfCheckmate = (board: Board, team: PieceColor) => {
 
     for(let row = 0; row < board.length; row++) {
         for(let column = 0; column < board.length; column++) {
             const piece = board[row][column];
-            if(piece?.color === team) {
+            if (piece?.color === team) {
                 let possibleMoves = getPossibleMoves(piece, piece.position, board, {from: "", to: ""})
+                const oldPosition = piece.position;
+                const oldBoardCoordinates = tileIdToBoardCoordinates(oldPosition);
+                
+                for(const move of possibleMoves){
+                    const simulatedBoard = board.map((row) => [...row]);
+                    const boardCoordinates = tileIdToBoardCoordinates(move);
+                    const updatedPiece = ({
+                        ...piece,
+                        position: move,
+                    })
+                    simulatedBoard[boardCoordinates.tileY][boardCoordinates.tileX] = updatedPiece;
+                    simulatedBoard[oldBoardCoordinates.tileY][oldBoardCoordinates.tileX] = null;
 
-                const oldPositionX = HORIZONTAL_AXIS.indexOf(piece.position[0])
-                const oldPositionY = VERTICAL_AXIS.length - parseInt(piece.position[1]);
-
-                for (let move of possibleMoves) {
-                    const boardCopy = board.map(row => row.map(piece => piece ? { ...piece } : null));
-                    const newPositionX = HORIZONTAL_AXIS.indexOf(move[0])
-                    const newPositionY = VERTICAL_AXIS.length - parseInt(move[1]);
-
-                    boardCopy[newPositionY][newPositionX] = piece;
-                    boardCopy[oldPositionY][oldPositionX] = null;
-
-                    const isKingStillInDanger = validateKingInDanger(boardCopy, team);
-                    if(!isKingStillInDanger) {
+                    const kingInDanger = validateKingInDanger(simulatedBoard, team);
+                    if (!kingInDanger) {
                         return false;
                     }
                 }
@@ -135,4 +115,25 @@ export const checkIfCheckmate =  (board: Board, team: PieceColor) => {
         }
     }
     return true;
+}
+
+export const validateTileInDanger = (board: Board, team: PieceColor, tileId: Position) => {
+
+    const enemyTeam = team === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
+
+    for(let row = 0; row < board.length; row++) {
+        for(let column = 0; column < board.length; column++) {
+            const piece = board[row][column];
+            if (piece?.color === enemyTeam) {
+                let possibleMoves = getPossibleMoves(piece, piece.position, board, {from: "", to: ""});
+                for(const move of possibleMoves) {
+                    if(move === tileId) {
+                        return true;
+                    }
+                    
+                }
+            }
+        }
+    }
+    return false;
 }

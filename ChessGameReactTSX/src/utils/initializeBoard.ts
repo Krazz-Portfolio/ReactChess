@@ -1,4 +1,4 @@
-import { Board, Piece, PieceColor, PieceType } from "../types/types";
+import { Board, Piece, PieceColor, PieceType } from "../data/types/types";
 
 export const initializeBoard = (): Board => {
     

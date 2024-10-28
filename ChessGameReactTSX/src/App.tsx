@@ -1,23 +1,31 @@
 import { useState } from "react";
 import "./App.css";
 import ChessBoard from "./components/ChessBoard/ChessBoard";
-import SettingsMenu from "./components/Settings/SettingMenu";
+import { GameState, PieceColor } from "./data/types/types";
+import { initializeBoard } from "./utils/initializeBoard";
 import TurnIndicator from "./components/TurnIndicator/TurnIndicator";
-import { PieceColor } from "./types/types";
+import SettingsMenu from "./components/Settings/SettingMenu";
 
 function App() {
+  const [gameState, setGameState] = useState<GameState>(() => ({
+    board: initializeBoard(),
+    currentTurn: PieceColor.WHITE,
+    selectedPiece: null,
+    possibleMoves: [],
+    previousMove: { from: "", to: "" },
+    winner: null,
+  }));
+
   const [showPossibleMoves, setShowPossibleMoves] = useState<boolean>(false);
-  const [currentTurn, setCurrentTurn] = useState<
-    PieceColor.BLACK | PieceColor.WHITE
-  >(PieceColor.WHITE);
 
   return (
     <div className="app">
-      <TurnIndicator currentTurn={currentTurn} />
+      <TurnIndicator currentTurn={gameState.currentTurn} />
       <div className="game">
         <ChessBoard
           showPossibleMoves={showPossibleMoves === true}
-          setCurrentTurn={setCurrentTurn}
+          gameState={gameState}
+          setGameState={setGameState}
         />
         <SettingsMenu
           onClick={() => setShowPossibleMoves(!showPossibleMoves)}

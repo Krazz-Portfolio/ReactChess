@@ -1,8 +1,8 @@
-import { version } from "react";
-import { HORIZONTAL_AXIS, VERTICAL_AXIS } from "../../Constants";
-import { Board, Piece, PieceColor, PieceType, Position } from "../../types/types";
-
-export const getPossibleKingMoves = (piece: Piece, board: Board, oldPosition: Position) => {
+import { HORIZONTAL_AXIS, VERTICAL_AXIS } from "../../data/constants/constants";
+import { Board, Piece, PieceColor, PieceType, Position } from "../../data/types/types";
+import { boardCoordinatesToTileId } from "../../utils/boardHelpers";
+import { validateTileInDanger } from "../MoveValidator";
+export const getPossibleKingMoves = (piece: Piece, board: Board, oldPosition: Position, isKingInDanger?: boolean) => {
 
     let possibleMoves: string[] = []
 
@@ -11,8 +11,6 @@ export const getPossibleKingMoves = (piece: Piece, board: Board, oldPosition: Po
     const coordinateY =  VERTICAL_AXIS.length - parseInt(oldPosition[1]);
 
     const coordinateX = HORIZONTAL_AXIS.indexOf(String.fromCharCode(oldPosition[0].charCodeAt(0)));
-
-    // console.log(coordinateY, coordinateX)
 
     const moves = [
         [-1, 1], [0, 1], [1, 1],
@@ -33,17 +31,23 @@ export const getPossibleKingMoves = (piece: Piece, board: Board, oldPosition: Po
         }
     });
 
-    if (!piece.hasMoved) {
+    if (!piece.hasMoved && isKingInDanger === false) {
         for(let x = coordinateX + 1; x < 8; x++) {
             const pieceOnSquare = board[coordinateY][x];
+            console.log(x)
 
             if(x === 7) {
                 if(pieceOnSquare?.type === PieceType.ROOK && !pieceOnSquare.hasMoved) {
                     possibleMoves.push(HORIZONTAL_AXIS[x - 1] + (VERTICAL_AXIS.length - coordinateY) + " - Castle")
                     possibleMoves.push(HORIZONTAL_AXIS[x] + (VERTICAL_AXIS.length - coordinateY) + " - Castle")
-
                 }
-            } else if (pieceOnSquare !== null) {
+            } else if (pieceOnSquare === null) {
+                const tileId = boardCoordinatesToTileId(x, coordinateY);
+                const isTileInDanger = validateTileInDanger(board, piece.color, tileId);
+                if(isTileInDanger) {
+                    break;
+                };
+            } else if (pieceOnSquare !== null) { 
                 break;
             }
         }
@@ -57,6 +61,12 @@ export const getPossibleKingMoves = (piece: Piece, board: Board, oldPosition: Po
                     possibleMoves.push(HORIZONTAL_AXIS[x + 1] + (VERTICAL_AXIS.length - coordinateY) + " - Castle")
                     possibleMoves.push(HORIZONTAL_AXIS[x] + (VERTICAL_AXIS.length - coordinateY) + " - Castle")
                 }
+            } else if (pieceOnSquare === null) {
+                const tileId = boardCoordinatesToTileId(x, coordinateY);
+                const isTileInDanger = validateTileInDanger(board, piece.color, tileId);
+                if(isTileInDanger && x !== 1) {
+                    break;
+                };
             } else if (pieceOnSquare !== null) {
                 break;
             }

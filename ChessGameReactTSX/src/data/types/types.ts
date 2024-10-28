@@ -21,8 +21,6 @@ export interface Piece {
     hasMoved: boolean,
 }
 
-// Add a new variable: hasMoved
-
 export type Board = Array<Array<Piece | null>>;
 
 export interface GameState {
@@ -31,4 +29,5 @@ export interface GameState {
     selectedPiece: Piece | null,
     possibleMoves: Position[]
     previousMove: {from: Position; to: Position}
+    winner: PieceColor | null
 }

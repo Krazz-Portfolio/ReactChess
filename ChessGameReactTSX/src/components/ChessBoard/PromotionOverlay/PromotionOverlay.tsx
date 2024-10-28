@@ -1,12 +1,21 @@
-import { Piece, PieceType } from "../../../types/types";
+import { Board, Piece, PieceType, Position } from "../../../data/types/types";
+import { tileIdToBoardCoordinates } from "../../../utils/boardHelpers";
 import "./PromotionOverlay.css";
 
 interface Props {
-  piece: Piece | null;
+  board: Board;
+  position: Position | null;
   onPromotion: (piece: Piece) => void;
 }
 
-export const PromotionOverlay = ({ piece, onPromotion }: Props) => {
+export const PromotionOverlay = ({ board, position, onPromotion }: Props) => {
+  if (!position) {
+    return;
+  }
+
+  const boardCoordinates = tileIdToBoardCoordinates(position);
+
+  const piece = board[boardCoordinates.tileY][boardCoordinates.tileX];
   if (!piece) {
     return;
   }

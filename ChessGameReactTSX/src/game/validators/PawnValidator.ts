@@ -1,5 +1,5 @@
-import { HORIZONTAL_AXIS, VERTICAL_AXIS } from "../../Constants";
-import { Board, Piece, PieceColor, PieceType, Position } from "../../types/types";
+import { HORIZONTAL_AXIS, VERTICAL_AXIS } from "../../data/constants/constants";
+import { Board, PieceColor, PieceType, Position } from "../../data/types/types";
 
 export const getPossiblePawnMoves = (team: PieceColor, board: Board, oldPosition: Position, previousMove: {from: Position, to: Position}) => {
 

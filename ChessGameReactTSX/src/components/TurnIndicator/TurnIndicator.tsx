@@ -1,4 +1,4 @@
-import { PieceColor } from "../../types/types";
+import { PieceColor } from "../../data/types/types";
 import "./TurnIndicator.css";
 
 interface Props {
