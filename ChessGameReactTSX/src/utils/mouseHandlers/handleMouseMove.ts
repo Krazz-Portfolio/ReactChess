@@ -1,7 +1,7 @@
 
 import { RefObject } from "react";
 import { GameState } from "../../data/types/types";
-import { HORIZONTAL_AXIS, VERTICAL_AXIS } from "../../data/constants/Constants";
+import { HORIZONTAL_AXIS, VERTICAL_AXIS } from "../../data/constants/constants";
 
 interface HandleMouseMoveProps {
     event: React.MouseEvent;

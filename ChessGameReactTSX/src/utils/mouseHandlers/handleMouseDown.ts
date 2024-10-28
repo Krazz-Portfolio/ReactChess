@@ -1,7 +1,7 @@
 import { RefObject } from "react";
 import { GameState, Piece } from "../../data/types/types";
-import { HORIZONTAL_AXIS, VERTICAL_AXIS } from "../../data/constants/Constants";
 import { getPossibleMoves, validateKingInDanger } from "../../game/MoveValidator";
+import { HORIZONTAL_AXIS, VERTICAL_AXIS } from "../../data/constants/constants";
 
 interface HandleMouseMoveProps {
     piece: Piece;
@@ -28,50 +28,49 @@ export const handleMouseDown = ({piece, event, chessboardRef, gameState, setGame
         selectedPiece: null,
       });
     } else {
+      if(piece.color === gameState.currentTurn) {
+        const isOwnKingInDanger = validateKingInDanger(gameState.board, piece.color);
 
-      const isOwnKingInDanger = validateKingInDanger(gameState.board, piece.color);
+        const possibleMoves = getPossibleMoves(
+          piece,
+          piece.position,
+          gameState.board,
+          gameState.previousMove,
+          isOwnKingInDanger,
+        );
 
-      // console.log("own king")
-      // console.log(isOwnKingInDanger)
+        setGameState({
+          ...gameState,
+          selectedPiece: piece,
+          possibleMoves: possibleMoves,
+        });
 
-      const possibleMoves = getPossibleMoves(
-        piece,
-        piece.position,
-        gameState.board,
-        gameState.previousMove,
-        isOwnKingInDanger,
-      );
-      // console.log(possibleMoves)
-      setGameState({
-        ...gameState,
-        selectedPiece: piece,
-        possibleMoves: possibleMoves,
-      });
+        setDraggedPosition({
+          x: event.clientX - boardStartHorizontal,
+          y: event.clientY - boardStartVertical,
+        });
 
-      setDraggedPosition({
-        x: event.clientX - boardStartHorizontal,
-        y: event.clientY - boardStartVertical,
-      });
+        // This is functionality to show that you are hovering over a square.
+        const hoveredX = Math.floor(
+          (event.clientX - boardStartHorizontal) / (chessboard.clientWidth / 8)
+        );
+        const hoveredY = Math.floor(
+          (event.clientY - boardStartVertical) / (chessboard.clientHeight / 8)
+        );
 
-      // This is functionality to show that you are hovering over a square.
-      const hoveredX = Math.floor(
-        (event.clientX - boardStartHorizontal) / (chessboard.clientWidth / 8)
-      );
-      const hoveredY = Math.floor(
-        (event.clientY - boardStartVertical) / (chessboard.clientHeight / 8)
-      );
+        const xAxis = HORIZONTAL_AXIS[hoveredX];
+        const yAxis = VERTICAL_AXIS[VERTICAL_AXIS.length - hoveredY - 1];
+        setHoveredSquare(xAxis.toString() + yAxis.toString());
+        // --------------
 
-      const xAxis = HORIZONTAL_AXIS[hoveredX];
-      const yAxis = VERTICAL_AXIS[VERTICAL_AXIS.length - hoveredY - 1];
-      setHoveredSquare(xAxis.toString() + yAxis.toString());
-      // --------------
+        // To make sure the pointer is on the middle of the piece.
+        const target = event.currentTarget as HTMLElement;
+        const offsetX = target.clientWidth / 2;
+        const offsetY = target.clientHeight / 2;
 
-      // To make sure the pointer is on the middle of the piece.
-      const target = event.currentTarget as HTMLElement;
-      const offsetX = target.clientWidth / 2;
-      const offsetY = target.clientHeight / 2;
-
-      setDragOffset({ x: offsetX, y: offsetY });
+        setDragOffset({ x: offsetX, y: offsetY });
+      }
+      
     }
   }
 };
