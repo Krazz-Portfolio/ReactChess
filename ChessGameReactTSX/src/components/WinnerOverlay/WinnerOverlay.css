@@ -16,6 +16,12 @@
     color: white;
     font-size: 2rem;
     font-weight: bold;
-    padding: 10%;
+    padding: 7% 10%;
     background-color: #262521;
+    text-align: center;
+}
+
+.message h5 {
+    font-size: small;
+    cursor: pointer;
 }

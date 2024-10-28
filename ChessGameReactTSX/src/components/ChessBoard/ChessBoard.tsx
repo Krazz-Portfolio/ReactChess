@@ -120,7 +120,9 @@ const ChessBoard = ({ showPossibleMoves, gameState, setGameState }: Props) => {
   return (
     <div className="chessboard" ref={chessboardRef}>
       {boardUI}
-      {gameState.winner && <WinnerOverlay winner={gameState.winner} />}
+      {gameState.winner && (
+        <WinnerOverlay winner={gameState.winner} setGameState={setGameState} />
+      )}
       {promotionOverlay && (
         <PromotionOverlay
           board={gameState.board}
