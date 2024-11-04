@@ -80,6 +80,8 @@ const ChessBoard = ({ showPossibleMoves, gameState, setGameState }: Props) => {
             })
           }
         >
+          {tileId[0] === "a" && <div className="left-label">{tileId[1]}</div>}
+          {tileId[1] === "1" && <div className="bottom-label">{tileId[0]}</div>}
           {piece && (
             <div
               className={`piece ${isSelected ? "selected-piece" : ""}`}
